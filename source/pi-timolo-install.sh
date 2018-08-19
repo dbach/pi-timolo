@@ -1,220 +1,273 @@
 #!/bin/bash
 # Convenient pi-timolo-install.sh script written by Claude Pageau 1-Jul-2016
-ver="4.92"
+ver="10.7"
+progName=$(basename -- "$0")
 TIMOLO_DIR='pi-timolo'  # Default folder install location
 
+# Make sure ver below matches latest rclone ver on https://downloads.rclone.org/rclone-current-linux-arm.zip
+rclone_cur_ver="rclone v1.41"
+
 cd ~
+is_upgrade=false
 if [ -d "$TIMOLO_DIR" ] ; then
   STATUS="Upgrade"
-  echo "Upgrade pi-timolo files"
-else  
-  echo "New pi-timolo Install"
+  echo "INFO  : Upgrade pi-timolo files"
+  is_upgrade=true
+else
+  echo "INFO  : New pi-timolo Install"
   STATUS="New Install"
   mkdir -p $TIMOLO_DIR
   mkdir -p $TIMOLO_DIR/media
-  echo "$TIMOLO_DIR Folder Created"
-fi 
+  echo "INFO  : $TIMOLO_DIR Folder Created"
+fi
 
 cd $TIMOLO_DIR
 INSTALL_PATH=$( pwd )
 
 # Remember where this script was launched from
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-echo "-------------------------------------------------------------"
-echo "      pi-timolo Install.sh script ver $ver"
-echo "Install or Upgrade pi-timolo Pi, Timelapse, Motion, Low Light"
-echo "-------------------------------------------------------------"
-echo "1 - Downloading pi-timolo github repo files"
-echo ""
+echo "
+-------------------------------------------------------------
+INFO  : $progName $ver  written by Claude Pageau
+        $STATUS from https://github.com/pageauc/pi-timolo
+-------------------------------------------------------------
+"
+# check if this is an upgrade and bypass update of configuration files
+if $is_upgrade ; then
+  timoloFiles=("menubox.sh" "pi-timolo.py" "pi-timolo.sh"  \
+ "webserver.py" "webserver.sh" \
+"convid.sh" "makevideo.sh" "mvleavelast.sh" "remote-run.sh")
 
-if [ -e config.py ]; then
-  if [ ! -e config.py.orig ]; then
-     echo "Save config.py to config.py.orig"
-     cp config.py config.py.orig
-  fi
-  echo "Backup config.py to config.py.prev"
-  cp config.py config.py.prev
-else
-  wget -O config.py -q --show-progress https://raw.github.com/pageauc/pi-timolo/master/source/config.py     
+else   # New Install
+  timoloFiles=("config.py" "menubox.sh" "pi-timolo.py" "pi-timolo.sh" \
+"webserver.py" "webserver.sh" "watch-app.sh" \
+"convid.sh" "makevideo.sh" "video.conf" "mvleavelast.sh" "remote-run.sh")
 fi
 
-if [ -e convid.conf.1 ]; then
-  rm convid.conf.1
-  rm makevideo.conf.1
-fi
+for fname in "${timoloFiles[@]}" ; do
+    wget_output=$(wget -O $fname -q --show-progress https://raw.github.com/pageauc/pi-timolo/master/source/$fname)
+    if [ $? -ne 0 ]; then
+        wget_output=$(wget -O $fname -q https://raw.github.com/pageauc/pi-timolo/master/source/$fname)
+        if [ $? -ne 0 ]; then
+            echo "ERROR : $fname wget Download Failed. Possible Cause Internet Problem."
+        else
+            wget -O $fname https://raw.github.com/pageauc/pi-timolo/master/source/$fname
+        fi
+    fi
+done
 
-wget -O media/webserver.txt https://raw.github.com/pageauc/pi-timolo/master/source/webserver.txt
-wget -O config_new.py -q --show-progress https://raw.github.com/pageauc/pi-timolo/master/source/config.py
+wget -O config.py.new -q --show-progress https://raw.github.com/pageauc/pi-timolo/master/source/config.py
 if [ $? -ne 0 ] ;  then
-  wget -O config.py https://raw.github.com/pageauc/pi-timolo/master/source/config.py
-  wget -O config.py.stream https://raw.github.com/pageauc/pi-timolo/master/source/config.py.stream
-  wget -O config.py.default https://raw.github.com/pageauc/pi-timolo/master/source/config.py.default
-  wget -O menubox.sh https://raw.github.com/pageauc/pi-timolo/master/source/menubox.sh  
-  wget -O pi-timolo.py https://raw.github.com/pageauc/pi-timolo/master/source/pi-timolo.py
-  wget -O pi-timolo.sh https://raw.github.com/pageauc/pi-timolo/master/source/pi-timolo.sh  
-  wget -O pi-timolo-install.sh https://raw.github.com/pageauc/pi-timolo/master/source/pi-timolo-install.sh
-  wget -O Readme.md https://raw.github.com/pageauc/pi-timolo/master/Readme.md
-  wget -O sync.sh https://raw.github.com/pageauc/pi-timolo/master/source/sync.sh
-  wget -O webserver.py https://raw.github.com/pageauc/pi-timolo/master/source/webserver.py
-  wget -O webserver.sh https://raw.github.com/pageauc/pi-timolo/master/source/webserver.sh  
-  wget -O convid.sh https://raw.github.com/pageauc/pi-timolo/master/source/convid.sh 
-  wget https://raw.github.com/pageauc/pi-timolo/master/source/convid.conf 
-  wget -O makevideo.sh https://raw.github.com/pageauc/pi-timolo/master/source/makevideo.sh
-  wget https://raw.github.com/pageauc/pi-timolo/master/source/makevideo.conf 
-  wget -O mvleavelast.sh https://raw.github.com/pageauc/pi-timolo/master/source/mvleavelast.sh
-  wget -O myip.sh https://raw.github.com/pageauc/pi-timolo/master/source/myip.sh
-  wget -O gdrive https://raw.github.com/pageauc/pi-timolo/master/source/drive_armv6
+    wget -O config.py.new https://raw.github.com/pageauc/pi-timolo/master/source/config.py
+    wget -O watch-app-new.sh https://raw.github.com/pageauc/pi-timolo/master/source/watch-app.sh
+    wget -O video.conf.new https://raw.github.com/pageauc/pi-timolo/master/source/video.conf
+    wget -O Readme.md https://raw.github.com/pageauc/pi-timolo/master/Readme.md
+    wget -O media/webserver.txt https://raw.github.com/pageauc/pi-timolo/master/source/webserver.txt
+    wget -O rclone-test.sh https://raw.github.com/pageauc/pi-timolo/master/source/rclone-samples/rclone-master.sh
 else
-  wget -O config.py -q --show-progress https://raw.github.com/pageauc/pi-timolo/master/source/config.py
-  wget -O config.py.stream -q --show-progress https://raw.github.com/pageauc/pi-timolo/master/source/config.py.stream
-  wget -O config.py.default -q --show-progress https://raw.github.com/pageauc/pi-timolo/master/source/config.py.default
-  wget -O menubox.sh -q --show-progress https://raw.github.com/pageauc/pi-timolo/master/source/menubox.sh
-  wget -O pi-timolo.py -q --show-progress https://raw.github.com/pageauc/pi-timolo/master/source/pi-timolo.py
-  wget -O pi-timolo.sh -q --show-progress https://raw.github.com/pageauc/pi-timolo/master/source/pi-timolo.sh
-  wget -O pi-timolo-install.sh -q --show-progress https://raw.github.com/pageauc/pi-timolo/master/source/pi-timolo-install.sh  
-  wget -O Readme.md -q --show-progress https://raw.github.com/pageauc/pi-timolo/master/Readme.md
-  wget -O sync.sh -q --show-progress https://raw.github.com/pageauc/pi-timolo/master/source/sync.sh
-  wget -O webserver.py -q --show-progress https://raw.github.com/pageauc/pi-timolo/master/source/webserver.py
-  wget -O webserver.sh -q --show-progress https://raw.github.com/pageauc/pi-timolo/master/source/webserver.sh 
-  wget -O convid.sh -q --show-progress https://raw.github.com/pageauc/pi-timolo/master/source/convid.sh
-  wget -q --show-progress https://raw.github.com/pageauc/pi-timolo/master/source/convid.conf
-  wget -O makevideo.sh -q --show-progress https://raw.github.com/pageauc/pi-timolo/master/source/makevideo.sh
-  wget -q --show-progress https://raw.github.com/pageauc/pi-timolo/master/source/makevideo.conf
-  wget -O mvleavelast.sh -q --show-progress https://raw.github.com/pageauc/pi-timolo/master/source/mvleavelast.sh
-  wget -O myip.sh -q --show-progress https://raw.github.com/pageauc/pi-timolo/master/source/myip.sh
-  wget -O gdrive -q --show-progress https://raw.github.com/pageauc/pi-timolo/master/source/drive_armv6
+    wget -O watch-app-new.sh -q --show-progress https://raw.github.com/pageauc/pi-timolo/master/source/watch-app.sh
+    wget -O video.conf.new -q --show-progress https://raw.github.com/pageauc/pi-timolo/master/source/video.conf
+    wget -O Readme.md -q --show-progress https://raw.github.com/pageauc/pi-timolo/master/Readme.md
+    wget -O media/webserver.txt -q --show-progress https://raw.github.com/pageauc/pi-timolo/master/source/webserver.txt
+    wget -O rclone-test.sh -q --show-progress https://raw.github.com/pageauc/pi-timolo/master/source/rclone-samples/rclone-master.sh
 fi
-  
-echo "Done Download"
-echo "-------------------------------------------------------------"
-echo "2 - Make Required Files Executable"
-echo ""
-chmod +x *py
-chmod -x config*py
-chmod +x *sh 
-echo "Done Permissions"
-echo "-------------------------------------------------------------"
-# check if system was updated today
-NOW="$( date +%d-%m-%y )"
-LAST="$( date -r /var/lib/dpkg/info +%d-%m-%y )"
-if [ "$NOW" == "$LAST" ] ; then
-  echo "4 Raspbian System is Up To Date"
-  echo ""  
-else
-  echo "3 - Performing Raspbian System Update"
-  echo "    This Will Take Some Time ...."
-  echo ""
-  sudo apt-get -y update
-  echo "Done Update"
-  echo "-------------------------------------------------------------"
-  echo "4 - Performing Raspbian System Upgrade"
-  echo "    This Will Take Some Time ...."
-  echo ""
-  sudo apt-get -y upgrade
-  echo "Done Upgrade"
-fi  
-echo "------------------------------------------------"
-echo ""  
-echo "5 - Installing pi-timolo Dependencies"
-echo ""
-sudo apt-get install -yq python-picamera python-imaging dos2unix python-pyexiv2 libav-tools
-sudo apt-get install -yq python-scipy  # New Dependency for enhanced motion detection
+
+if [ ! -f video.conf ] ; then
+    cp video.conf.new video.conf
+fi
+
+if [ ! -f config.py ] ; then
+    cp config.py.new config.py
+fi
+cp config.py config.py.prev   # make copy of previous configuration
+
+if [ ! -f watch-app.sh ] ; then
+    cp watch-app-new.sh watch-app.sh
+fi
+
+# Install plugins if not already installed.  You must delete a plugin file to force reinstall.
+echo "INFO  : $STATUS Check/Install pi-timolo/plugins    Wait ..."
+PLUGINS_DIR='plugins'  # Default folder install location
+# List of plugin Files to Check
+pluginFiles=("__init__.py" "dashcam.py" "secfast.py" "secQTL.py" "secstill.py" \
+"secvid.py" "strmvid.py" "shopcam.py" "slowmo.py" "TLlong.py" "TLshort.py")
+
+mkdir -p $PLUGINS_DIR
+cd $PLUGINS_DIR
+for fname in "${pluginFiles[@]}" ; do
+  if [ -f $fname ]; then     # check if local file exists.
+    echo "INFO  : $fname plugin Found.  Skip Download ..."
+  else
+    wget_output=$(wget -O $fname -q --show-progress https://raw.github.com/pageauc/pi-timolo/master/source/plugins/$fname)
+    if [ $? -ne 0 ]; then
+        wget_output=$(wget -O $fname -q https://raw.github.com/pageauc/pi-timolo/master/source/plugins/$fname)
+        if [ $? -ne 0 ]; then
+            echo "ERROR : $fname wget Download Failed. Possible Cause Internet Problem."
+        else
+            wget -O $fname "https://raw.github.com/pageauc/pi-timolo/master/source/plugins/$fname"
+        fi
+    fi
+  fi
+done
+cd ..
+
+# Install rclone samples
+echo "INFO  : $STATUS Check/Install pi-timolo/rclone-samples    Wait ..."
+RCLONE_DIR='rclone-samples'  # Default folder install location
+# List of plugin Files to Check
+rcloneFiles=("Readme.md" "rclone-master.sh" "rclone-mo-copy-videos.sh" "rclone-mo-sync.sh" \
+"rclone-mo-sync-lockfile.sh" "rclone-mo-sync-recent.sh" "rclone-tl-copy.sh" "rclone-tl-sync-recent.sh" "rclone-cleanup.sh")
+
+mkdir -p $RCLONE_DIR
+cd $RCLONE_DIR
+for fname in "${rcloneFiles[@]}" ; do
+    wget_output=$(wget -O $fname -q --show-progress https://raw.github.com/pageauc/pi-timolo/master/source/rclone-samples/$fname)
+    if [ $? -ne 0 ]; then
+        wget_output=$(wget -O $fname -q https://raw.github.com/pageauc/pi-timolo/master/source/rclone-samples/$fname)
+        if [ $? -ne 0 ]; then
+            echo "ERROR : $fname wget Download Failed. Possible Cause Internet Problem."
+        else
+            wget -O $fname "https://raw.github.com/pageauc/pi-timolo/master/source/rclone-samples/$fname"
+        fi
+    fi
+done
+cd ..
+
+rclone_install=true
+if [ -f /usr/bin/rclone ]; then
+    /usr/bin/rclone version
+    rclone_ins_ver=$( /usr/bin/rclone version | grep rclone )
+    if [ "$rclone_ins_ver" == "$rclone_cur_ver" ]; then
+        rclone_install=false
+    fi
+fi
+
+if "$rclone_install" = true ; then
+    # Install rclone with latest version
+    echo "INFO  : Install Latest Rclone from https://downloads.rclone.org/rclone-current-linux-arm.zip"
+    wget -O rclone.zip -q --show-progress https://downloads.rclone.org/rclone-current-linux-arm.zip
+    if [ $? -ne 0 ]; then
+        wget -O rclone.zip https://downloads.rclone.org/rclone-current-linux-arm.zip
+    fi
+    echo "INFO  : unzip rclone.zip to folder rclone-tmp"
+    unzip -o -j -d rclone-tmp rclone.zip
+    echo "INFO  : Install files and man pages"
+    cd rclone-tmp
+    sudo cp rclone /usr/bin/
+    sudo chown root:root /usr/bin/rclone
+    sudo chmod 755 /usr/bin/rclone
+    sudo mkdir -p /usr/local/share/man/man1
+    sudo cp rclone.1 /usr/local/share/man/man1/
+    sudo mandb
+    cd ..
+    echo "INFO  : Deleting rclone.zip and Folder rclone-tmp"
+    rm rclone.zip
+    rm -r rclone-tmp
+    echo "INFO  : /usr/bin/rclone Install Complete"
+fi
+
+echo "INFO  : $STATUS Install pi-timolo Dependencies Wait ..."
+
+sudo apt-get install -yq python-picamera
+sudo apt-get install -yq python3-picamera
+sudo apt-get install -yq python-imaging
+sudo apt-get install -yq python3-pil
+sudo apt-get install -yq dos2unix
+sudo apt-get install -yq python-pyexiv2
+sudo apt-get install -yq libav-tools  # used for makevideo gpac
+sudo apt-get install -yq pandoc # convert markdown to plain text for Readme.md
 sudo apt-get install -yq gpac   # required for MP4Box video converter
 sudo apt-get install -yq fonts-freefont-ttf # Required for Jessie Lite Only
-if [ -e gdrive ]; then
-  echo "-------------------------------------------------------------"
-  echo "6 - Install Latest gdrive to /usr/local/bin/gdrive"
-  echo ""
-  sudo chmod +x gdrive
-  sudo cp gdrive /usr/local/bin
-  /usr/local/bin/gdrive | grep version
-  echo "Done gdrive Install"
-else
-  echo "Error - Could not find gdrive file in current folder.  Please investigate ..."
-  echo "        pi-timolo syncing feature will not be available."
+sudo apt-get install -yq python-opencv
+sudo apt-get install -yq python-pip
+sudo apt-get install -yq python3-dateutil
+sudo apt-get install -yq python-dateutil
+if [ $? -ne 0 ] ;  then
+    sudo apt-get install -yq python3-pip
+    sudo pip install python-dateutil  # used for scheduled date/time feature
+    if [ $? -ne 0 ] ;  then
+        # Upgrade version of pip on Raspbian Wheezy to add ssl support
+        curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+        sudo python get-pip.py
+        rm get-pip.py
+    fi
 fi
+sudo pip install python-dateutil
+dos2unix -q *
+chmod +x *py
+chmod -x config*py
+chmod +x *sh
+chmod +x rclone-samples/*sh
 
-dos2unix *sh
-dos2unix *py
+echo "INFO  : $STATUS Done Dependencies Install"
 
-cd $DIR
 # Check if pi-timolo-install.sh was launched from pi-timolo folder
 if [ "$DIR" != "$INSTALL_PATH" ]; then
-  if [ -e 'pi-timolo-install.sh' ]; then
-    echo "$STATUS Cleanup pi-timolo-install.sh"
+  if [ -f 'pi-timolo-install.sh' ]; then
+    echo "INFO  : $STATUS Cleanup pi-timolo-install.sh"
     rm pi-timolo-install.sh
   fi
 fi
 
-if [ -e 'install.sh' ]; then
-  echo "$STATUS Delete Old install.sh"
-  rm install.sh
+# cleanup old files from previous versions of install
+cleanup_files=("get-pip.py" "gdrive" "install.sh" "makemovie.sh" "makedailymovie.sh" \
+"convid.conf" "convid.conf.orig" "convid.conf.prev" "convid.conf.1" "convid.conf.new" \
+"makevideo.conf" "makevideo.conf.orig" "makevideo.conf.prev" "makevideo.conf.1" \
+"makevideo.conf.new" "sync.sh" "pi-timolo-install.sh" "rclone-sync-new.sh" "rclone-videos-new.sh")
+
+for fname in "${cleanup_files[@]}" ; do
+    if [ -f $fname ] ; then
+        echo "INFO  : Delete $fname"
+        rm -f $fname
+    fi
+done
+
+if [ -f /usr/bin/rclone ]; then
+    echo "INFO  : $STATUS rclone is installed at /usr/bin/rclone"
+    rclone version
+else
+    echo "ERROR : $STATUS Problem Installing rclone.  Please Investigate"
 fi
 
-if [ -e 'makemovie.sh' ]; then
-  echo "$STATUS Delete Old makemovie.sh"
-  rm makemovie.sh
+echo "
+-----------------------------------------------
+INFO  : $STATUS Complete ver 10.x
+-----------------------------------------------
+Minimal Instructions:
+1 - It is suggested you run sudo apt-get update and sudo apt-get upgrade
+    Reboot RPI if there are significant Raspbian system updates.
+2 - If config.py already exists then latest file is config.py.new
+3 - To Test Run pi-timolo execute the following commands in RPI SSH
+    or terminal session. Default is Motion Track On and TimeLapse On
+
+    cd ~/pi-timolo
+    ./pi-timolo.py
+
+4 - To manage pi-timolo, Run menubox.sh Execute commands below
+
+    cd ~/pi-timolo
+    ./menubox.sh"
+
+if $is_upgrade ; then
+    echo "
+IMPORTANT: pi-timolo.py ver 10.x Adds a Sched StartAt Feature.
+           If pi-timolo.py gives error messages on start
+           then the latest config.py may not be configured.
+           Install per commands below if Required.
+
+    cd ~/pi-timolo
+    cp config.py config.py.bak
+    cp config.py.new config.py
+    nano config.py
+
+Use nano to Restore Custom Settings from config.py.bak then ctrl-x y to Save and Exit
+For Details See Wiki at
+https://github.com/pageauc/pi-timolo/wiki/How-to-Schedule-Motion,-Timelapse-or-VideoRepeat"
 fi
 
-if [ -e 'makedailymovie.sh' ]; then
-  echo "$STATUS Delete Old makedailymovie.sh"
-  rm makedailymovie.sh
-fi
+echo "
+For Full Instructions See Wiki at https://github.com/pageauc/pi-timolo/wiki
 
-echo "Done Dependencies"
-echo "-----------------------------------------------"
-echo "7 - $STATUS Complete"
-echo "-----------------------------------------------"
-echo "Note:"
-echo "1 - Reboot RPI if there are significant Raspbian system updates."
-echo "2 - If config.py already exists then old file is config.py.prev"
-echo "3 - Check pi-timolo variable settings in config.py per comments"
-echo "    cd ~/pi-timolo"
-echo "    nano config.py"
-echo "    ctrl-x y to save and quit nano editor"
-echo "4 - To Run pi-timolo perform the following in SSH or terminal session"
-echo "    cd ~/pi-timolo"
-echo "    ./pi-timolo.py"
-echo "-------------------------------------------------------------"
-echo "              IMPORTANT UPGRADE INFORMATION"
-echo "1 - makemovie.sh and makedailymovie.sh have been deleted"
-echo "    They are Now Replaced by makevideo.sh and convid.sh"
-echo "2 - If this is an upgrade then config.py will be replaced."
-echo "    and previous will be config.py.prev. If version is 4.30 or greater"
-echo "    cp config.py.prev config.py to restore previous config.py"
-echo "    otherwise you will need to edit the new config.py with your previous settings"
-echo "    that are in the config.prev file."
-echo "3 - A new menubox.sh has been added to make admin easier"
-echo "4 - Variable settings are now stored in .conf files or config.py"
-echo "    This allows upgrading without loosing settings"
-echo "5 - motion, timelapse, video folder are now in media folder"
-echo "6 - Existing config files will Not be overwritten.  New files will be"
-echo "    .1, .2 etc or config.py new file will be config_new.py"
-echo "------------------------------------------------------------------"
-echo "For further details See Readme.md or GitHub wiki"
-echo "here https://github.com/pageauc/pi-timolo/wiki"
-
-if ! grep -q "web_server_root" config.py ; then
-   cp config_new.py config.py
-   echo ""   
-   echo "IMPORTANT:  Your config.py has been Upgraded"
-   echo "and Replaced with config_new.py"
-   echo "Your previous settings are in config.py.prev"
-fi
-echo "====================================================="
-if [ ! -e /usr/bin/mc ]; then
-   echo ""
-   echo "-----  Optional Install of Midnight Commander -----"
-   echo "This is an Interactive Console File Manager"
-   echo "It can utilize mouse/function keys in SSH session"
-   echo "and makes managing local files on the RPI easier"
-   echo "Another option is to use filezilla on a windows computer"
-   echo "To Installing Midnight Commander execute command below."
-   echo ""
-   echo "    sudo apt-get install mc "
-   echo ""
-   echo "type mc to Run Midnight Commander"
-fi
-echo "Good Luck Claude ..."
-echo "Bye"
+Good Luck Claude ...
+Bye"
 

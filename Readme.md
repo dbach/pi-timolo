@@ -1,100 +1,113 @@
-# pi-timolo
-### Raspberry (Pi) - (Ti)melapse, (Mo)tion, (Lo)wlight
-### Wiki https://github.com/pageauc/pi-timolo/wiki     
-YouTube Videos https://www.youtube.com/playlist?list=PLLXJw_uJtQLa11A4qjVpn2D2T0pgfaSG0
+# PI-TIMOLO [![Mentioned in Awesome <INSERT LIST NAME>](https://awesome.re/mentioned-badge.svg)](https://github.com/thibmaek/awesome-raspberry-pi)
+### Raspberry (Pi)camera, (Ti)melapse, (Mo)tion, (Lo)wlight 
+## For Details See [Program Features](https://github.com/pageauc/pi-timolo/wiki/Introduction#program-features) and [Wiki Instructions](https://github.com/pageauc/pi-timolo/wiki) and [YouTube Videos](https://www.youtube.com/playlist?list=PLLXJw_uJtQLa11A4qjVpn2D2T0pgfaSG0)
 
-**NEW Release 5.0** with optional video stream thread, improved day/night transitions with no greenish images + Misc updates
-**NEW Release 6.0** with optional DateTime Named subfolders, recent files option and Disk Space Management + Misc updates 
-**NEW Release 6.7** with videoRepeat option to take continuous video clips by filename datetime or seq num and exit by specified time or number of videos or run continuous and manage by freedisk space..  This is similar to a dash cam.  Requires the updated config.py.
-**See Minimal Upgrade Below**
-
-### Description
-pi-timolo is a python picamara module application for a Raspberry PI computer (RPI).
-A RPI camera module must be attached. pi-timolo can take timelapse and motion detection
-images/videos, separately or together. Takes Long exposure Night (lowlight) images for
-Time Lapse and/or Motion. Has smooth twilight transitions based on a threshold light
-setting, so a real time clock is not required. Customization settings are saved in a config.py and conf files.
-The application is primarily designed for headless operation and includes sync.sh that
-can securely synchronize files with a users google drive.  This works well for remote security
-cameras. Camera config.py settings can be administered remotely from a google drive using sync.sh.
-Includes makevideo.sh to create timelapse or motion lapse videos from images, convid.sh to convert/combine 
-h264 to mp4 format, a simple minumum or no setup web server to view images or videos and menubox.sh 
-to admin settings and stop start pi-timolo and webserver as background tasks.
-        
-***NEW*** - Added two config.py templates config.py.stream uses video streaming thread (best with quad core) config.py.default
-uses normal picamera image capture for motion detection and is less resource intensive for single core RPI's    
-Make a backup of config.py then Copy a template over the original config.py per example below   
-
-    cd ~/pi-timolo.py
-    cp config.py config.py.bak
-    cp config.py.stream config.py
-    
-***Note:*** use nano to reinstate any customized settings
-
-see Github Wiki for More Details https://github.com/pageauc/pi-timolo/wiki    
+* ***Release 9.x*** New Features have been Added. See Wiki Details below    
+ [plugins Setup and Operation](https://github.com/pageauc/pi-timolo/wiki/How-to-Use-Plugins)   
+ [Rclone Setup and Media Sync](https://github.com/pageauc/pi-timolo/wiki/How-to-Setup-rclone) (Replaces gdrive)    
+ [watch-app.sh Remote Configuration Management](https://github.com/pageauc/pi-timolo/wiki/How-to-Setup-config.py-Remote-Configuration)   
+ [python3 Support Details](https://github.com/pageauc/pi-timolo/wiki/Prerequisites#python-3-support)   
+* ***Release 10.x*** Added Sched Start to Motion Track, Timelapse and VideoRepeat. See Wiki Details below    
+ [How To Schedule Motion, Timelapse or VideoRepeat](https://github.com/pageauc/pi-timolo/wiki/How-to-Schedule-Motion,-Timelapse-or-VideoRepeat)  
+ This release requires config.py be updated by the user with config.py.new since new variables have been added.
  
-### Quick Install
-For Easy pi-timolo-install.sh onto raspbian RPI. 
+## Requirements
+Requires a [***Raspberry Pi computer***](https://www.raspberrypi.org/documentation/setup/) and a 
+[***RPI camera module installed***](https://www.raspberrypi.org/documentation/usage/camera/).
+Make sure hardware is tested and works. Most [RPI models](https://www.raspberrypi.org/products/) will work OK. 
+A quad core RPI will greatly improve performance due to threading. A recent version of 
+[Raspbian operating system](https://www.raspberrypi.org/downloads/raspbian/) is Recommended.
+ 
+## Quick Install or Upgrade
+**IMPORTANT** - It is suggested you do a Raspbian ***sudo apt-get update*** and ***sudo apt-get upgrade***
+before curl install, since it is **No longer** performed by the pi-timolo-install.sh script
+
+***Step 1*** With mouse left button highlight curl command in code box below. Right click mouse in **highlighted** area and Copy.     
+***Step 2*** On RPI putty SSH or terminal session right click, select paste then Enter to download and run script.     
 
     curl -L https://raw.github.com/pageauc/pi-timolo/master/source/pi-timolo-install.sh | bash
 
-From a computer logged into the RPI via SSH(Putty) or desktop terminal session  
-* Use mouse to highlight curl command above, right click, copy.  
-* Select RPI SSH(Putty) window, mouse right click, paste.   
-The command will download and execute the GitHub pi-timolo-install.sh script   
+The command above will download and Run the GitHub ***pi-timolo-install.sh*** script. 
+An upgrade will not overwrite configuration files.   
 
-**IMPORTANT** - A raspbian apt-get update and upgrade will be performed as part of install
-so it may take some time if these are not up-to-date       
+* ***NOTICE*** gdrive is no longer installed with pi-timolo-install.sh, I have been testing
+rclone and it is Now the Default. Some ***rclone-*** samples are included. Make a copy of one, rename and edit for
+your own needs.  See [Wiki - How to Setup Rclone](https://github.com/pageauc/pi-timolo/wiki/How-to-Setup-rclone).
+Note: If a ***/usr/local/bin/gdrive*** File Exists, It Will Remain. Older files are still available on this GitHub Repo.   
 
-### Minimal Upgrade
+## Test Install
+To Test Run default config.py - motion track(HD image) plus timelapse(5 min interval). 
+ 
+    cd ~/pi-timolo
+    ./pi-timolo.py
+
+### For More Details see [Basic Trouble Shooting](https://github.com/pageauc/pi-timolo/wiki/Basic-Trouble-Shooting) or [pi-timolo Wiki](https://github.com/pageauc/pi-timolo/wiki)
+
+## Description
+PI-TIMOLO is primarily designed for ***headless operation*** and includes rclone that
+can securely synchronize specified media folders and files with a users remote storage service of choice. This works well for remote security and monitoring
+cameras. Camera config.py and conf settings can be easily administered remotely from a designated sync directory using ***watch-app.sh***
+script using a crontab entry to periodically check for updates between the pi-timolo camera and a users remote storage rclone service name. 
+
+pi-timolo is python 2/3 compatible and can take timelapse and/or motion detection images/videos, separately or together. Will take
+long exposure Night (lowlight) images for Time Lapse and/or Motion. Has relatively smooth twilight transitions based on a threshold light
+setting, so a real time clock is not required. Customization settings are saved in a ***config.py*** and conf files and optional special
+purpose plugin config files. Optional plugin feature allows overlaying config.py settings with custom settings for specific tasks.  
+
+Includes ***makevideo.sh*** to create timelapse or motion lapse videos from images, ***convid.sh*** to convert/combine 
+h264 to mp4 format, a simple minumum or no setup web server to view images or videos and ***menubox.sh*** 
+to admin settings and stop start pi-timolo and webserver as background tasks. 
+       
+For more Details see [Github Wiki](https://github.com/pageauc/pi-timolo/wiki)   
+
+## Minimal Upgrade
 If you are just interested in a minimal upgrade (must have pi-timolo previously installed)
 from a logged in ssh or terminal session execute the following commands.  
 
     cd ~/pi-timolo
+    sudo apt-get install python-opencv
     cp config.py config.py.old
+    cp pi-timolo.py pi-timolo.py.old
     wget -O config.py https://raw.github.com/pageauc/pi-timolo/master/source/config.py
     wget -O pi-timolo.py https://raw.github.com/pageauc/pi-timolo/master/source/pi-timolo.py    
     
 Edit config.py to transfer any customized settings from config.py.old  
     
-### or Manual Install   
+## Manual Install or Upgrade  
 From logged in RPI SSH session or console terminal perform the following. You can review
 the pi-timolo-install.sh script code before executing.
 
     cd ~
     wget https://raw.github.com/pageauc/pi-timolo/master/source/pi-timolo-install.sh
+    more pi-timolo-install.sh    # Review code if required
     chmod +x pi-timolo-install.sh
     ./pi-timolo-install.sh
     
-### Run pi-timolo 
-Default is motion only see config.py for detailed settings   
-    
-    cd ~/pi-timolo
-    ./pi-timolo.py   
- 
-### Menubox
-The lastest version of pi-timolo has a whiptail admin menu system. The menu's allow
-start/stop of pi-timolo.py and webserver.py as background tasks, as well as
+## Menubox
+pi-timolo has a whiptail administration menu system. The menu's allow
+start/stop of pi-timolo.py and/or webserver.py as background tasks, as well as
 editing configuration files, making timelapse videos from jpg images, converting or joining mp4 files Etc.    
-To run from ssh console or terminal session.
+
+To run menubox.sh from ssh console or terminal session execute commands below.
 
     cd ~/pi-timolo
     ./menubox.sh
 
 ![menubox main menu](menubox.png)
  
-### Webserver
+## Webserver
 I have also written a standalone LAN based webserver.py to allow easy access to pi-timolo image and video files
 on the Raspberry from another LAN computer web browser.  There is no setup required but the display
-settings can be customized via variables in the config.py file or via menubox admin menuing.   
-To run from ssh console or terminal session.
+settings can be customized via variables in the config.py file or via menubox admin menuing.     
+***NOTE:*** webserver.py is normally run in background using menubox.sh, webserver.sh or from /etc/rc.local     
+To Test Run from ssh console or terminal session. 
     
     cd ~/pi-timolo
     ./webserver.py
 
-![webserver browser screen shot](webserver.png)
+![webserver browser screen shot](webserver.jpg)
  
-### Reference Links  
+## Reference Links  
 Detailed pi-timolo Wiki https://github.com/pageauc/pi-timolo/wiki  
 YouTube Videos https://www.youtube.com/playlist?list=PLLXJw_uJtQLa11A4qjVpn2D2T0pgfaSG0
  

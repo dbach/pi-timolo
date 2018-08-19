@@ -1,5 +1,5 @@
 #!/bin/sh
-# writtem by Claude Pageau 
+# writtem by Claude Pageau
 # Script to run pi-timolo.py in background available here
 # wget https://raw.github.com/pageauc/pi-timolo/master/source/timolo.sh
 # launch from command line or via entry in /etc/rc.local file
@@ -18,7 +18,7 @@ progsleep=10
 
 echo "$0 ver 1.1 written by Claude Pageau"
 echo "-----------------------------------------------"
-cd $progpath
+cd "$progpath"
 
 # Check if progname exists
 if [ ! -e $progname ] ; then
@@ -36,7 +36,7 @@ if [ -z "$( pgrep -f $progname )" ]; then
     # comment line below for no redirection of console output
     $progpath/$progname  >/dev/null 2>&1 &
     # NOTE set verbose = True in config.py then
-    # then uncomment line below for logging 
+    # then uncomment line below for logging
     # echo "Start $progpath/$progname with log to $progpath/$proglog"
     # python -u $progpath/$progname  > $progpath/$proglog &
   fi
